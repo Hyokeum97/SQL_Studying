@@ -1,0 +1,91 @@
+-- 1. Data Manipulation
+INSERT INTO Movies (movie_id, title, release_year, genre_id, rating)
+VALUES
+	(106, 'A New Dawn', 2023, 3, 8.2)
+	
+
+-- 2.1 Aggregation Functions
+SELECT 
+	a.genre_id
+	,SUM(b.duration)
+FROM 
+	Movies  a JOIN Viewership b ON a.movie_id = b.movie_id
+GROUP BY
+	a.genre_id
+
+--OR--
+SELECT 
+	a.genre_id
+	,SUM(duration) OVER(PARTITION BY genre_id)
+FROM Movies  a JOIN Viewership b ON a.movie_id = b.movie_id
+
+	
+-- 2.1.1 More
+SELECT 
+	d.genre_id
+	,d.name
+	,SUM(c.duration) OVER(PARTITION BY d.genre_id) AS Total_Viewership
+FROM 
+	(Movies  a JOIN Viewership b ON a.movie_id = b.movie_id) c 
+	JOIN
+	Genres d ON c.genre_id = d.genre_id
+
+
+-- 2.2 Average Rating by Genre
+SELECT 
+	a.genre_id
+	,b.name
+	,AVG(a.rating)
+FROM 
+	Movies a JOIN Genres b ON a.genre_id = b.genre_id
+GROUP BY
+	a.genre_id
+	
+-- 3.1 Genres with High Average Rating
+SELECT 
+	a.genre_id
+	,b.name
+	,AVG(a.rating) as AvgRating
+FROM 
+	Movies a JOIN Genres b ON a.genre_id = b.genre_id
+GROUP BY
+	a.genre_id
+HAVING
+	AVG(a.rating) > 7.5
+ORDER BY
+	AvgRating DESC
+	
+-- 3.2 Genres with High Viewing Hours
+SELECT 
+	d.genre_id
+	,d.name
+	,SUM(c.duration) * 60 as Total_viewership
+FROM 
+	(Movies  a JOIN Viewership b ON a.movie_id = b.movie_id) c 
+	JOIN
+	Genres d ON c.genre_id = d.genre_id
+GROUP BY
+	d.genre_id
+HAVING
+	SUM(c.duration) * 60 > 5000
+ORDER BY
+	Total_viewership DESC;
+	
+-- 4.1 Movies by Genre
+SELECT 
+	b.name
+	,COUNT(a.genre_id) AS MovieCount
+FROM 
+	Movies a JOIN Genres b ON a.genre_id = b.genre_id
+GROUP BY
+	a.genre_id
+	,b.name;
+	
+-- 4.2 Average Viewing Duration by User
+SELECT
+	a.name,
+	AVG(b.duration) AS AvgDurationTime
+FROM 
+	Users a JOIN Viewership b ON a.user_id = b.user_id
+GROUP BY
+	a.name
